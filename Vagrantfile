@@ -1,7 +1,7 @@
 require 'yaml'
 
 ip = '192.168.56.201'
-hostname = 'demo'
+vmname = 'demo'
 
 # initialize ansible inventory
 inventory = {
@@ -11,10 +11,10 @@ inventory = {
       'ansible_ssh_timeout' => 60
     },
     'hosts' => {
-      hostname + 'test.local' => {
+      vmname + '.test.local' => {
         'ansible_host' => ip,
         'ansible_user' => 'vagrant',
-        'ansible_ssh_private_key_file' => '.vagrant/machines/' + hostname + '/virtualbox/private_key'
+        'ansible_ssh_private_key_file' => '.vagrant/machines/' + vmname + '/virtualbox/private_key'
       }
     }
   }
@@ -27,12 +27,11 @@ File.open('./hosts.yml', 'w') {|f| f.write inventory.to_yaml}
 
 Vagrant.configure("2") do |config|
   config.vm.synced_folder "~/Downloads", "/files"
-  config.vm.define "#{hostname}" do |node|
+  config.vm.define "#{vmname}" do |node|
     node.vm.network 'private_network', ip: "#{ip}"
-    # node.vm.hostname = "#{hostname}.local"
     config.vm.box = "bento/rockylinux-8"
     node.vm.provider 'virtualbox' do |v|
-      v.name = "#{hostname}"
+      v.name = "#{vmname}"
       v.memory = 8192
       v.cpus = 2
       v.linked_clone = true
@@ -46,6 +45,7 @@ Vagrant.configure("2") do |config|
     ansible.playbook = "test.yml"
     ansible.inventory_path = "./hosts.yml"
     ansible.raw_arguments = ["--vault-password-file", "~/vault-pass.txt"]
+    ansible.limit = "all" # defaults to machine name
     ansible.compatibility_mode = "2.0"
   end
 
