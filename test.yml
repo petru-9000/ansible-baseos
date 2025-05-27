@@ -12,9 +12,9 @@
     - name: Set hostsfile
       ansible.builtin.lineinfile:
         dest: /etc/hosts
-        regexp: "{{ hostvars[inventory_hostname]['ansible_facts']['eth1']['ipv4']['address'] }}"
+        regexp: "{{ hostvars[inventory_hostname]['ansible_facts'][ansible_default_ipv4.interface]['ipv4']['address'] }}"
         line: >
-          {{ hostvars[inventory_hostname]['ansible_facts']['eth1']['ipv4']['address'] }}
+          {{ hostvars[inventory_hostname]['ansible_facts'][ansible_default_ipv4.interface]['ipv4']['address'] }}
           {{ inventory_hostname | split('.') | first }}
           {{ inventory_hostname }}
         state: present
