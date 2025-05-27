@@ -5,11 +5,14 @@
 
   tasks:
     - name: Set hostname
+      # assumes 'inventory_hostname' is fqdn
       ansible.builtin.hostname:
         name: "{{ inventory_hostname }}"
         use: systemd
 
     - name: Set hostsfile
+    # assumes a single interface
+    # could also loop through ip's in 'ansible_all_ipv4_addresses'
       ansible.builtin.lineinfile:
         dest: /etc/hosts
         regexp: "{{ hostvars[inventory_hostname]['ansible_facts'][ansible_default_ipv4.interface]['ipv4']['address'] }}"
