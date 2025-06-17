@@ -4,11 +4,11 @@
   become_method: ansible.builtin.sudo
 
   tasks:
-    - name: Set hostname
+    # - name: Set hostname
       # assumes 'inventory_hostname' is fqdn
-      ansible.builtin.hostname:
-        name: "{{ inventory_hostname }}"
-        use: systemd
+      # ansible.builtin.hostname:
+      #   name: "{{ inventory_hostname }}"
+      #   use: systemd
 
     - name: Set hostsfile
     # assumes a single interface
@@ -30,7 +30,15 @@
     #     line: "    [ \"$PS1\" = \"\\s-\\v\\\\$ \" ] && PS1=\"[{{ inventory_hostname | split('.') | first }}-\\u@\\h \\W]\\$ \""
 
     - name: Set PS1
-      ansible.builtin.copy:
-        content: "PS1=\"[{{ inventory_hostname | split('.') | first }}-\\u@\\h \\W]\\$ \""
+      # ansible.builtin.copy:
+      #   content: "PS1=\"[{{ inventory_hostname | split('.') | first }}-\\u@\\h \\W]\\$ \""
+      #   dest: /etc/profile.d/ps1.sh
+      #   owner: root
+      #   group: root
+      #   mode: '0755'
+      ansible.builtin.template:
+        src: ps1.sh.j2
         dest: /etc/profile.d/ps1.sh
+        owner: root
+        group: root
         mode: '0755'
