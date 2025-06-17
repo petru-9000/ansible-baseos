@@ -1,0 +1,1 @@
+ps1_str: "{{ 'PS1=\"[ansible! ' + inventory_hostname | split('.') | first + '-\\u@\\h \\W]\\$ \"' }}"
