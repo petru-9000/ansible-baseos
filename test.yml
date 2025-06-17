@@ -32,6 +32,7 @@
     - name: Set PS1
       # ansible.builtin.copy:
       #   content: "PS1=\"[{{ inventory_hostname | split('.') | first }}-\\u@\\h \\W]\\$ \""
+      #   content: "{{ ps1_str }}"
       #   dest: /etc/profile.d/ps1.sh
       #   owner: root
       #   group: root
