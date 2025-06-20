@@ -41,6 +41,8 @@ Vagrant.configure("2") do |config|
   config.vm.network "forwarded_port", guest: 9990, host: 9990
   config.vm.network "forwarded_port", guest: 8080, host: 8080
 
+  config.vm.disk :disk, name: "newswap", size: "10GB"
+
   config.vm.provision :ansible do |ansible|
     ansible.playbook = "test.yml"
     ansible.inventory_path = "./hosts.yml"

@@ -22,13 +22,6 @@
           {{ inventory_hostname }}
         state: present
 
-    # - name: Set PS1
-    #   ansible.builtin.lineinfile:
-    #     dest: /etc/bashrc
-    #     # regexp: '^\s+\[.+PS1=\"\[.*\\u@\\h \\W\]\\\\\$ \"'
-    #     regexp: ^\s*[^\s^#].*S1=['"].*\\u@\\h.*$
-    #     line: "    [ \"$PS1\" = \"\\s-\\v\\\\$ \" ] && PS1=\"[{{ inventory_hostname | split('.') | first }}-\\u@\\h \\W]\\$ \""
-
     - name: Set PS1
       # ansible.builtin.copy:
       #   content: "PS1=\"[{{ inventory_hostname | split('.') | first }}-\\u@\\h \\W]\\$ \""
@@ -43,3 +36,49 @@
         owner: root
         group: root
         mode: '0755'
+
+    - name: Create volume groups
+      community.general.lvg:
+        vg: "{{ item.name }}"
+        pvs: "{{ item.pv }}"
+      loop: "{{ _vgs | default([]) }}"
+
+
+    - name: Create logical volumes
+      community.general.lvol:
+        vg: "{{ item.vg }}"
+        lv: "{{ item.name }}"
+        size: "{{ item.size }}"
+      register: new_vol
+      loop: "{{ _swap_lvs | default([]) }}"
+
+    - name: Format filesystems
+      community.general.filesystem:
+        fstype: swap
+        dev: "/dev/{{ item.vg }}/{{ item.name }}"
+      register: new_lv
+      loop: "{{ _swap_lvs | default([]) }}"
+
+    - name: Add swap entries to /etc/fstab
+      ansible.posix.mount:
+        name: none
+        src: "/dev/{{ item.vg }}/{{ item.name }}"
+        fstype: swap
+        opts: sw
+        state: present
+      loop: "{{ _swap_lvs | default([]) }}"
+
+    - name: Enable swap
+      ansible.builtin.command: "swapon {{ item }}"
+      when: item
+      changed_when: true
+      loop: >
+        {{
+        new_lv.results |
+        selectattr('changed', 'equalto', True) |
+        map(attribute='invocation.module_args.dev')
+        }}
+
+    - name: Reload daemon
+      ansible.builtin.systemd:
+        daemon_reload: true

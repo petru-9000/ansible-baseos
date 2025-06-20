@@ -1,1 +1,25 @@
 ps1_str: "{{ 'PS1=\"[' + inventory_hostname | split('.') | first + '-\\u@\\h \\W]\\$ \"' }}"
+
+_vgs:
+  - name: rhel
+    pv: /dev/sdb
+
+_swap_lvs:
+  # - name: data
+  #   vg: rhel
+  #   size: 1g
+  - name: swap
+    vg: rhel
+    size: 1g
+  - name: swap2
+    vg: rhel
+    size: 1g
+  - name: swap-3
+    vg: rhel
+    size: 1g
+
+_filesystems:
+  - name: "/data"
+    vg: rhel
+    lv: data
+    fstype: xfs
