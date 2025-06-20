@@ -43,8 +43,7 @@
         pvs: "{{ item.pv }}"
       loop: "{{ _vgs | default([]) }}"
 
-
-    - name: Create logical volumes
+    - name: Create swap volumes
       community.general.lvol:
         vg: "{{ item.vg }}"
         lv: "{{ item.name }}"
@@ -52,7 +51,7 @@
       register: new_vol
       loop: "{{ _swap_lvs | default([]) }}"
 
-    - name: Format filesystems
+    - name: Format swap volumes
       community.general.filesystem:
         fstype: swap
         dev: "/dev/{{ item.vg }}/{{ item.name }}"
@@ -78,11 +77,13 @@
         fstype: swap
         opts: sw
         state: present
+      register: fstab_file
       loop: "{{ _swap_lvs | default([]) }}"
 
-    - name: Reload daemon
+    - name: Reload daemon # noqa: no-handler
       ansible.builtin.systemd:
         daemon_reload: true
+      when: fstab_file.changed
 
     - name: Enable swap
       ansible.builtin.command: "swapon {{ item }}"
