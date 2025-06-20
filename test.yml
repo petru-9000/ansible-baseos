@@ -59,6 +59,31 @@
       register: new_lv
       loop: "{{ _swap_lvs | default([]) }}"
 
+    # # This will find all swap-formatted lv's that are not swapon-ed, not just new ones
+    # - name: Find unused swap partitions
+    #   ansible.builtin.shell:
+    #     cmd: >
+    #       set -o pipefail &&
+    #       for vol in $(lsblk -o KNAME,FSTYPE | awk '$2 == "swap" {printf "/dev/%s\n",$1}'); do
+    #       swapon -s | grep -Fw "$vol" >/dev/null || echo $vol;
+    #       done
+    #     executable: /usr/bin/bash
+    #   register: swap_available
+    #   changed_when: false
+
+    - name: Enable swap
+      ansible.builtin.command: "swapon {{ item }}"
+      when: item
+      changed_when: true
+      # loop: "{{ swap_available.stdout_lines }}"
+      loop: >
+        {{
+        new_lv.results |
+        selectattr('changed', 'equalto', True) |
+        map(attribute='invocation.module_args.dev')
+        }}
+
+
     - name: Add swap entries to /etc/fstab
       ansible.posix.mount:
         name: none
@@ -67,17 +92,6 @@
         opts: sw
         state: present
       loop: "{{ _swap_lvs | default([]) }}"
-
-    - name: Enable swap
-      ansible.builtin.command: "swapon {{ item }}"
-      when: item
-      changed_when: true
-      loop: >
-        {{
-        new_lv.results |
-        selectattr('changed', 'equalto', True) |
-        map(attribute='invocation.module_args.dev')
-        }}
 
     - name: Reload daemon
       ansible.builtin.systemd:
