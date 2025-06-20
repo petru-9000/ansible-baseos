@@ -71,19 +71,6 @@
     #   register: swap_available
     #   changed_when: false
 
-    - name: Enable swap
-      ansible.builtin.command: "swapon {{ item }}"
-      when: item
-      changed_when: true
-      # loop: "{{ swap_available.stdout_lines }}"
-      loop: >
-        {{
-        new_lv.results |
-        selectattr('changed', 'equalto', True) |
-        map(attribute='invocation.module_args.dev')
-        }}
-
-
     - name: Add swap entries to /etc/fstab
       ansible.posix.mount:
         name: none
@@ -96,3 +83,15 @@
     - name: Reload daemon
       ansible.builtin.systemd:
         daemon_reload: true
+
+    - name: Enable swap
+      ansible.builtin.command: "swapon {{ item }}"
+      when: item
+      changed_when: true
+      # loop: "{{ swap_available.stdout_lines }}"
+      loop: >
+        {{
+        new_lv.results |
+        selectattr('changed', 'equalto', True) |
+        map(attribute='invocation.module_args.dev')
+        }}
